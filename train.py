@@ -4,7 +4,7 @@ import pyximport
 pyximport.install() 
 
 from rover_domain_core_gym import RoverDomainGym
-from code.ccea_2 import *
+from utils.ccea_2 import *
 
 #pri alignment multiagent tumernt(vals)
 def make_env(nagents,rand=0):
