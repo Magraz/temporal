@@ -4,7 +4,7 @@ from collections import deque
 from random import sample
 
 class Net(torch.nn.Module):
-    def __init__(self, device, input_size=8, hidden_size=20*4, num_layers=1, lr=2e-3, loss_fn=0):
+    def __init__(self, device, input_size=8, hidden_size=20*4, num_layers=1, lr=1e-3, loss_fn=0):
         super(Net, self).__init__()
 
         self.device = device
@@ -38,7 +38,6 @@ class Net(torch.nn.Module):
     def train(self,x,y,shaping=False,n=5,verb=0):
         y = np.expand_dims(y, axis=0)
 
-        # x=torch.from_numpy(x.astype(np.float32)).to(self.device)
         y=torch.from_numpy(y.astype(np.float32)).to(self.device)
 
         pred = self.forward(x)
@@ -83,7 +82,6 @@ class lstm():
         return self.nets[agent_index].forward(trajectory)
     
     def train(self):
-        # loss = 99999
         for a in range(self.nagents):
             for i in range(100):
                 if len(self.hist[a])<24:
@@ -95,10 +93,7 @@ class lstm():
                     S.append(traj)
                     G.append([g])
                 S,G=np.array(S),np.array(G)
-
-                loss = self.nets[a].train(S,G)
-
-            # print(f"Agent {a}, Loss {loss}")
+                self.nets[a].train(S,G)
 
 if __name__ == "__main__":
     model = Net()
