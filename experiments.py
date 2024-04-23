@@ -25,7 +25,7 @@ def experiment(n_agents,reward_type,trial,device):
     elif reward_type==4:
         reward_mechanism=fitnesscritic(n_agents,device)
     elif reward_type==5:
-        reward_mechanism=lstm(n_agents,device)
+        reward_mechanism=lstm(n_agents,device, loss_f=2)
 
     R,pos=train(env,reward_mechanism)
     with open("saves/"+fname,"wb") as f:

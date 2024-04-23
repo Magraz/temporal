@@ -17,6 +17,7 @@ class Net(torch.nn.Module):
         self.output = torch.nn.Linear(self.hidden_size, 1).to(device)
 
         self.relu = torch.nn.ReLU()
+        self.sig = torch.nn.Sigmoid()
 
         self.optimizer = torch.optim.Adam(self.parameters(), lr=self.learning_rate)
 
@@ -64,7 +65,7 @@ class Net(torch.nn.Module):
         return loss
     
 class lstm():
-    def __init__(self,nagents,device,loss_f=0):
+    def __init__(self,nagents,device,loss_f=2):
         self.nagents=nagents
         self.nets=[Net(device,loss_fn=loss_f) for i in range(nagents)]
         self.hist=[deque(maxlen=30000) for i in range(nagents)]
