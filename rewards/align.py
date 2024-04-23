@@ -61,7 +61,7 @@ class Net():
         loss = -torch.mean(align)
         return loss
 class align():
-    def __init__(self,nagents,loss_f=0):
+    def __init__(self,nagents, device, loss_f=0):
         self.nagents=nagents
         #self.nets=[Net(loss_fn=loss_f) for i in range(nagents)]
         self.nets=[LSTM(loss_fn=loss_f) for i in range(nagents)]
@@ -81,6 +81,24 @@ class align():
         return feedback[0,0]
     
         #return self.nets[agent_index].feed(trajectory[-1])
+    
+    def train(self):
+        loss = 99999
+        for a in range(self.nagents):
+            for i in range(100):
+                if len(self.hist[a])<24:
+                    trajG=self.hist[a]
+                else:
+                    trajG=sample(self.hist[a],24)
+                S,G=[],[]
+                for traj,g in trajG:
+                    S.append(traj)
+                    G.append([g])
+                S,G=np.array(S),np.array(G)
+
+                loss = self.nets[a].train(S,G)
+
+            print(f"Agent {a}, Loss {loss}")
 
 class LSTM(torch.nn.Module):
     def __init__(self, input_size=8, hidden_size=20*4, num_layers=1, lr=2e-3, loss_fn=0):
@@ -145,26 +163,6 @@ class LSTM(torch.nn.Module):
         align = self.sig(align)
         loss = -torch.mean(align)
         return loss
-
-
-
-    def train(self):
-        loss = 99999
-        for a in range(self.nagents):
-            for i in range(100):
-                if len(self.hist[a])<24:
-                    trajG=self.hist[a]
-                else:
-                    trajG=sample(self.hist[a],24)
-                S,G=[],[]
-                for traj,g in trajG:
-                    S.append(traj)
-                    G.append([g])
-                S,G=np.array(S),np.array(G)
-
-                loss = self.nets[a].train(S,G)
-
-            print(f"Agent {a}, Loss {loss}")
 
 if __name__ == "__main__":
     model = LSTM()
