@@ -16,8 +16,6 @@ class Net(torch.nn.Module):
         self.lstm = torch.nn.LSTM(input_size=self.input_size, hidden_size=self.hidden_size, num_layers=self.num_layers, batch_first=True).to(device)
         self.output = torch.nn.Linear(self.hidden_size, 1).to(device)
 
-        self.sig = torch.nn.Sigmoid()
-        self.tanh = torch.nn.Tanh()
         self.relu = torch.nn.ReLU()
 
         self.optimizer = torch.optim.Adam(self.parameters(), lr=self.learning_rate)
@@ -30,6 +28,7 @@ class Net(torch.nn.Module):
             self.loss_fn = lambda x,y: self.alignment_loss(x,y) + torch.nn.MSELoss(reduction='sum')(x,y)
     
     def forward(self,x):
+        x=torch.from_numpy(x.astype(np.float32)).to(self.device)
         _, (hn, cn) = self.lstm(x)
         out = self.relu(hn)
         out = self.output(out)
@@ -38,7 +37,7 @@ class Net(torch.nn.Module):
     def train(self,x,y,shaping=False,n=5,verb=0):
         y = np.expand_dims(y, axis=0)
 
-        x=torch.from_numpy(x.astype(np.float32)).to(self.device)
+        # x=torch.from_numpy(x.astype(np.float32)).to(self.device)
         y=torch.from_numpy(y.astype(np.float32)).to(self.device)
 
         pred = self.forward(x)
@@ -47,7 +46,7 @@ class Net(torch.nn.Module):
         self.optimizer.zero_grad()
         loss.backward()
         self.optimizer.step()
-        return loss.item()
+        return loss.detach().item()
     
     def alignment_loss(self,o, t,shaping=False):
         if shaping:
@@ -74,16 +73,13 @@ class lstm():
         self.hist[agent_index].append([trajectory,G])
 
     def evaluate(self,trajectory,agent_index):
-        input = np.array([trajectory])
+        # input = np.array([trajectory])
         
-        npad = ((0, 32-input.shape[0]), (0, 0), (0, 0))
-        input = np.pad(input, pad_width=npad, mode='constant', constant_values=0)
-        input = torch.from_numpy(input.astype(np.float32))
+        # npad = ((0, 24-input.shape[0]), (0, 0), (0, 0))
+        # input = np.pad(input, pad_width=npad, mode='constant', constant_values=0)
+        # input = torch.from_numpy(input.astype(np.float32))
 
-        feedback = self.nets[agent_index].forward(input)
-        return feedback[0,0]
-    
-        #return self.nets[agent_index].feed(trajectory[-1])
+        return self.nets[agent_index].forward(trajectory)
     
     def train(self):
         loss = 99999
