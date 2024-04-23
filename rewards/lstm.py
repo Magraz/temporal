@@ -82,7 +82,7 @@ class lstm():
         return self.nets[agent_index].forward(trajectory)
     
     def train(self):
-        loss = 99999
+        # loss = 99999
         for a in range(self.nagents):
             for i in range(100):
                 if len(self.hist[a])<24:
@@ -97,7 +97,7 @@ class lstm():
 
                 loss = self.nets[a].train(S,G)
 
-            print(f"Agent {a}, Loss {loss}")
+            # print(f"Agent {a}, Loss {loss}")
 
 if __name__ == "__main__":
     model = Net()
