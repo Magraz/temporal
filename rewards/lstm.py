@@ -4,7 +4,7 @@ from collections import deque
 from random import sample
 
 class Net(torch.nn.Module):
-    def __init__(self, device, input_size=8, hidden_size=20*4, num_layers=1, lr=1e-3, loss_fn=0):
+    def __init__(self, device, input_size=8, hidden_size=40, num_layers=1, lr=1e-3, loss_fn=0):
         super(Net, self).__init__()
 
         self.device = device
@@ -14,9 +14,10 @@ class Net(torch.nn.Module):
         self.learning_rate = lr
 
         self.lstm = torch.nn.LSTM(input_size=self.input_size, hidden_size=self.hidden_size, num_layers=self.num_layers, batch_first=True).to(device)
-        self.output = torch.nn.Linear(self.hidden_size, 1).to(device)
+        self.fc = torch.nn.Linear(self.hidden_size, 60).to(device)
+        self.output = torch.nn.Linear(60, 1).to(device)
 
-        self.relu = torch.nn.ReLU()
+        self.leaky = torch.nn.LeakyReLU()
         self.sig = torch.nn.Sigmoid()
 
         self.optimizer = torch.optim.Adam(self.parameters(), lr=self.learning_rate)
@@ -30,13 +31,14 @@ class Net(torch.nn.Module):
     
     def forward(self,x):
         x=torch.from_numpy(x.astype(np.float32)).to(self.device)
-        _, (hn, cn) = self.lstm(x)
-        out = self.relu(hn)
+        _, (hn, _) = self.lstm(x)
+        out = self.fc(torch.squeeze(hn))
+        out = self.leaky(out)
         out = self.output(out)
         return out
     
     def train(self,x,y,shaping=False,n=5,verb=0):
-        y = np.expand_dims(y, axis=0)
+        y = np.expand_dims(y, axis=1)
 
         y=torch.from_numpy(y.astype(np.float32)).to(self.device)
 
@@ -73,12 +75,6 @@ class lstm():
         self.hist[agent_index].append([trajectory,G])
 
     def evaluate(self,trajectory,agent_index):
-        # input = np.array([trajectory])
-        
-        # npad = ((0, 24-input.shape[0]), (0, 0), (0, 0))
-        # input = np.pad(input, pad_width=npad, mode='constant', constant_values=0)
-        # input = torch.from_numpy(input.astype(np.float32))
-
         return self.nets[agent_index].forward(trajectory)
     
     def train(self):
@@ -91,7 +87,8 @@ class lstm():
                 S,G=[],[]
                 for traj,g in trajG:
                     S.append(traj)
-                    G.append([g])
+                    G.append(g)
+
                 S,G=np.array(S),np.array(G)
                 self.nets[a].train(S,G)
 
